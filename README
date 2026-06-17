@@ -1,0 +1,146 @@
+# Bitácora de Desarrollo y Configuración de Docker
+
+Este documento resume los pasos de configuración del entorno de contenedores, la personalización de imágenes y las soluciones a los problemas de permisos encontrados durante el desarrollo del proyecto `app_movil`.
+
+---
+
+## 1. Gestión de Imágenes y Contenedores
+
+### Limpieza de imágenes huérfanas (<none>)
+Para liberar espacio en disco eliminando las imágenes "dangling" (colgadas) que se generan durante las compilaciones:
+```bash
+docker image prune
+# O de forma forzada si están retenidas:
+docker rmi \$(docker images -f "dangling=true" -q)
+```
+
+### Control de servicios con Docker Compose
+* **Levantar el proyecto** (Base de datos Postgres, Backend FastAPI y Frontend Flutter/Nginx) en segundo plano:
+  ```bash
+  docker compose up -d
+  ```
+* **Detener y remover los contenedores** liberando memoria física (manteniendo los datos del volumen a salvo):
+  ```bash
+  docker compose down
+  ```
+* **Revisar los registros (logs)** del backend en caso de fallos de arranque:
+  ```bash
+  docker logs fastapi_backend
+  ```
+
+---
+
+## 2. Personalización del Nombre de la Imagen
+
+Para evitar nombres automáticos y asignar de manera fija el nombre `app_movil:latest` a la imagen del backend, se modificó el archivo `docker-compose.yml` añadiendo la propiedad `image` debajo de la directiva `build`:
+
+```yaml
+  backend:
+    build: ./backend
+    image: app_movil:latest  # <--- Nombre personalizado
+    container_name: fastapi_backend
+    ...
+```
+Para aplicar este cambio y compilar con el nuevo nombre se ejecutó:
+```bash
+docker compose build
+```
+
+---
+
+## 3. Resolución de Errores (Troubleshooting)
+
+### Error: `EACCES: permission denied` en VS Code
+* **Causa:** Docker creó las carpetas de compilación del frontend (`frontend/build/web`) bajo el usuario `root` (superusuario), bloqueando la edición y creación de archivos (como `index.html`) desde el usuario local de desarrollo.
+* **Solución:** Restaurar la propiedad de la carpeta completa al usuario actual del sistema y reasignar los permisos correctos de lectura/escritura:
+  ```bash
+  sudo chown -R m2990gato:m2990gato ~/Documentos/app_movil
+  sudo chmod -R 755 ~/Documentos/app_movil
+  ```
+
+---
+
+## 4. Acceso a los Servicios Locales
+* **Frontend (Nginx / Flutter Web):** http://localhost:3000
+* **Base de datos (PostgreSQL):** Puerto local `5433` (mapeado internamente al `5432`).
+---
+
+## 5. Guía de Referencia de Comandos Docker
+
+### ➡️ Los que usamos en esta sesión (Tus indispensables)
+```bash
+# Limpiar todas las imágenes <none> que gastan espacio
+docker image prune
+
+# Forzar el borrado de imágenes <none> si están rebeldes
+docker rmi \$(docker images -f "dangling=true" -q)
+
+# Ver las imágenes guardadas en tu computadora
+docker images
+
+# Ver qué contenedores están encendidos en este momento
+docker ps
+
+# Ver TODOS los contenedores (los encendidos y los apagados)
+docker ps -a
+
+# Encender tu entorno de Docker Compose en segundo plano
+docker compose up -d
+
+# Apagar y destruir los contenedores de Docker Compose (libera RAM)
+docker compose down
+
+# Forzar la reconstrucción de las imágenes en Docker Compose
+docker compose build
+
+# Ver qué está pasando o qué error da un contenedor
+docker logs fastapi_backend
+```
+
+### ➡️ Comandos Útiles para el Futuro (En caso de dudas)
+
+#### Gestión de Contenedores Sueltos
+```bash
+# Encender un contenedor que ya existe pero está apagado
+docker start nombre_o_id_contenedor
+
+# Apagar un contenedor individual sin borrarlo
+docker stop nombre_o_id_contenedor
+
+# Borrar un contenedor apagado de la lista
+docker rm nombre_o_id_contenedor
+```
+
+#### Inspección y Depuración (Para entrar a ver qué hay dentro)
+```bash
+# Entrar a la terminal (consola) de un contenedor que está corriendo
+docker exec -it nombre_o_id_contenedor bash
+
+# Entrar directo a la consola de Postgres (si el contenedor está activo)
+docker exec -it postgres_db psql -U postgres
+
+# Ver en tiempo real el consumo de CPU y RAM de tus contenedores
+docker stats
+```
+
+#### Limpieza Profunda (Para cuando te quedes sin espacio en disco)
+```bash
+# Borra TODO lo que no se esté usando (contenedores apagados, redes y caché)
+# Es el "botón de pánico" ideal si tu disco se llena
+docker system prune -a
+```
+
+#### Para Subir a Docker Hub (Lo primero que vimos)
+```bash
+# Iniciar sesión en tu cuenta desde la terminal
+docker login
+
+# Guardar los cambios de un contenedor vivo en una nueva imagen
+docker commit id_contenedor mi-nueva-imagen
+
+# Etiquetar tu imagen con tu usuario para poder subirla
+docker tag mi-nueva-imagen tu_usuario_docker/nombre_repo:etiqueta
+
+# Subir la imagen final a tu nube de Docker Hub
+docker push tu_usuario_docker/nombre_repo:etiqueta
+```
