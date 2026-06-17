@@ -7,9 +7,9 @@ class ApiService {
   // LOGIN
   static Future<bool> login(String email, String password) async {
     final res = await http.post(
-      Uri.parse("$baseUrl/login"),
+      Uri.parse("$baseUrl/token"),
       body: {
-        "email": email,
+        "username": email,
         "password": password,
       },
     );

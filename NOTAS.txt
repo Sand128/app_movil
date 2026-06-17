@@ -1,0 +1,45 @@
+BDD de postgrest
+
+
+1.-  Iniciar postgresql:
+    sudo systemctl restart postgresql
+
+2.- ver estatus:
+    sudo systemctl status postgresql
+
+3.- NOTA: Si por alguna rason ya has levantado un contenedor con postgresql incluido
+necesitas que levantar todo (contenerlo) para evitar probelmas con el puerto.
+
+
+🧱 Tu estructura correcta debería quedar así
+app_movil/
+│
+├── backend/
+│   ├── app/
+│   │   └── main.py
+│   ├── requirements.txt
+│   └── Dockerfile   👈 AQUÍ VA
+│
+├── frontend/
+│   └── (flutter web o código)
+│
+└── docker-compose.yml  👈 AQUÍ ORQUESTAS TODO
+
+
+🚀 Build correcto
+
+Dentro de backend/:
+
+    docker build -t fastapi-backend .
+
+Le dices a Docker: “construye una imagen”
+
+🏷️ -t fastapi-backend
+Le pones un nombre a la imagen:
+    👉 fastapi-backend
+Después podrás verla con:
+
+    docker images
+
+📁 . (punto final)
+Significa: 👉 “usa este directorio como contexto de construcción” O sea: 📌 toma el Dockerfile, requirements.txt, y tu código desde ahí

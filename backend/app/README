@@ -1,0 +1,15 @@
+.- Configuración del Proyecto
+    Instalación de Dependencias
+    Terminal
+        # Crear entorno virtual
+        python -m venv venv
+        source venv/bin/activate --- linux
+        venv\Scripts\activate  ----- windows
+
+        # Instalar Dependencias
+        pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv python-jose[cryptography] passlib[bcrypt]
+
+        # requeriments.txt
+        pip install -r requeriments.txt
+
+# comando para generar un token de prueba ----/\  openssl rand -hex 32
